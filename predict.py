@@ -71,7 +71,18 @@ class Predictor(BasePredictor):
         enable_hr: bool = Input(
             description="Hires. fix", default=False,
         ),
-        scale: float = Input(
+        hr_upscaler: str = Input(
+            description="Upscaler for Hires. fix",
+            choices=['Latent', 'Latent (antialiased)', 'Latent (bicubic)', 'Latent (bicubic antialiased)', 'Latent (nearest)', 'Latent (nearest-exact)', 'None', 'Lanczos', 'Nearest', 'ESRGAN_4x', 'LDSR', 'R-ESRGAN 4x+', 'R-ESRGAN 4x+ Anime6B', 'ScuNET GAN', 'ScuNET PSNR', 'SwinIR 4x'],
+            default="Latent",
+        ),
+        hr_steps: int = Input(
+            description="Inference steps for Hires. fix", ge=0, le=100, default=20
+        ),
+        denoising_strength: float = Input(
+            description="Denoising strength. 1.0 corresponds to full destruction of information in init image", ge=0, le=1, default=0.5
+        ),
+        hr_scale: float = Input(
             description="Factor to scale image by", ge=1, le=4, default=2
         ),
     ) -> Path:
@@ -88,14 +99,14 @@ class Predictor(BasePredictor):
             "batch_size": num_outputs,
             "steps": num_inference_steps,
             "cfg_scale": guidance_scale,
-            "denoising_strength": 0.75,
             "seed": seed,
             "do_not_save_samples": True,
             "sampler_name": scheduler,
             "enable_hr": enable_hr,
-            "denoising_strength": 0.5,
-            "hr_scale": scale,
-            "hr_upscaler": "R-ESRGAN 4x+ Anime6B",
+            "hr_upscaler": hr_upscaler,
+            "hr_second_pass_steps": hr_steps,
+            "denoising_strength": denoising_strength if enable_hr else None,
+            "hr_scale": hr_scale,
         }
 
         from modules.api.models import StableDiffusionTxt2ImgProcessingAPI, StableDiffusionImg2ImgProcessingAPI
