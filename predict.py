@@ -42,17 +42,38 @@ class Predictor(BasePredictor):
 
     def predict(
         self,
-        prompt: str = Input(description="Input prompt"),
+        prompt: str = Input(description="Prompt"),
+        negative_prompt: str = Input(description="Negative Prompt", default=""),
         width: int = Input(
-            description="width", ge=0, le=1024, default=512
+            description="Width of output image", ge=1, le=1024, default=512
         ),
         height: int = Input(
-            description="height", ge=0, le=1024, default=512
+            description="Height of output image", ge=1, le=1024, default=512
+        ),
+        num_outputs: int = Input(
+            description="Number of images to output", ge=1, le=4, default=1
+        ),
+        scheduler: str = Input(
+            description="scheduler",
+            choices=['DPM++ 2M Karras', 'DPM++ SDE Karras', 'DPM++ 2M SDE Exponential', 'DPM++ 2M SDE Karras', 'Euler a', 'Euler', 'LMS', 'Heun', 'DPM2', 'DPM2 a', 'DPM++ 2S a', 'DPM++ 2M', 'DPM++ SDE', 'DPM++ 2M SDE', 'DPM++ 2M SDE Heun', 'DPM++ 2M SDE Heun Karras', 'DPM++ 2M SDE Heun Exponential', 'DPM++ 3M SDE', 'DPM++ 3M SDE Karras', 'DPM++ 3M SDE Exponential', 'DPM fast', 'DPM adaptive', 'LMS Karras', 'DPM2 Karras', 'DPM2 a Karras', 'DPM++ 2S a Karras', 'Restart', 'DDIM', 'PLMS', 'UniPC'],
+            default="DPM++ SDE Karras",
+        ),
+        num_inference_steps: int = Input(
+            description="Number of denoising steps", ge=1, le=100, default=20
+        ),
+        guidance_scale: float = Input(
+            description="Scale for classifier-free guidance", ge=1, le=50, default=7.5
+        ),
+        seed: int = Input(
+            description="Random seed. Leave blank to randomize the seed", default=-1
         ),
         # image: Path = Input(description="Grayscale input image"),
-        # scale: float = Input(
-        #     description="Factor to scale image by", ge=0, le=10, default=1.5
-        # ),
+        enable_hr: bool = Input(
+            description="Hires. fix", default=False,
+        ),
+        scale: float = Input(
+            description="Factor to scale image by", ge=1, le=4, default=2
+        ),
     ) -> Path:
         """Run a single prediction on the model"""
         # processed_input = preprocess(image)
@@ -61,20 +82,20 @@ class Predictor(BasePredictor):
         payload = {
             # "init_images": [encoded_image],
             "prompt": prompt,
-            "negative_prompt": "",
-            "batch_size": 1,
-            "steps": 20,
-            "cfg_scale": 7,
-            "denoising_strength": 0.75,
-            # "seed": -1,
-            "do_not_save_samples": True,
-            "sampler_name": "DPM++ SDE Karras",
+            "negative_prompt": negative_prompt,
             "width": width,
             "height": height,
-            # "enable_hr": True,
-            # "denoising_strength": 0.5,
-            # "hr_scale": 2,
-            # "hr_upscaler": "R-ESRGAN 4x+ Anime6B",
+            "batch_size": num_outputs,
+            "steps": num_inference_steps,
+            "cfg_scale": guidance_scale,
+            "denoising_strength": 0.75,
+            "seed": seed,
+            "do_not_save_samples": True,
+            "sampler_name": scheduler,
+            "enable_hr": enable_hr,
+            "denoising_strength": 0.5,
+            "hr_scale": scale,
+            "hr_upscaler": "R-ESRGAN 4x+ Anime6B",
         }
 
         from modules.api.models import StableDiffusionTxt2ImgProcessingAPI, StableDiffusionImg2ImgProcessingAPI
