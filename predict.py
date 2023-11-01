@@ -1,10 +1,10 @@
 # Prediction interface for Cog ⚙️
 # https://github.com/replicate/cog/blob/main/docs/python.md
 
-import os, sys
+import os, sys, json
 sys.path.extend(['/stable-diffusion-webui'])
 
-from cog import BasePredictor, Input, Path
+from cog import BasePredictor, BaseModel, Input, Path
 
 class Predictor(BasePredictor):
     def setup(self) -> None:
@@ -85,7 +85,7 @@ class Predictor(BasePredictor):
         hr_scale: float = Input(
             description="Factor to scale image by", ge=1, le=4, default=2
         ),
-    ) -> Path:
+    ) -> list[Path]:
         """Run a single prediction on the model"""
         # processed_input = preprocess(image)
         # output = self.model(processed_image, scale)
@@ -113,18 +113,22 @@ class Predictor(BasePredictor):
         req = StableDiffusionTxt2ImgProcessingAPI(**payload)
         # generate
         resp = self.api.text2imgapi(req)
+        info = json.loads(resp.info)
 
         from PIL import Image
         import uuid
         import base64
         from io import BytesIO
 
-        cnres_img = None
-        if len(resp.images) > 0:
-            cnres_img = resp.images[0]
-        gen_bytes = BytesIO(base64.b64decode(cnres_img))
-        gen_data = Image.open(gen_bytes)
-        filename = "{}.png".format(uuid.uuid1())
-        gen_data.save(fp=filename, format="PNG")
-        print(filename)
-        return Path(filename)
+        outputs = []
+
+        for i, image in enumerate(resp.images):
+            seed = info["all_seeds"][i]
+            gen_bytes = BytesIO(base64.b64decode(image))
+            gen_data = Image.open(gen_bytes)
+            filename = "{}-{}.png".format(seed, uuid.uuid1())
+            gen_data.save(fp=filename, format="PNG")
+            output = Path(filename)
+            outputs.append(output)
+
+        return outputs
