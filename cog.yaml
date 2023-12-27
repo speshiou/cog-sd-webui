@@ -21,12 +21,9 @@ build:
 
   # commands run after the environment is setup
   run:
-    - git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui /stable-diffusion-webui
-    - wget --content-disposition -P /stable-diffusion-webui/models/Stable-diffusion "https://civitai.com/api/download/models/176425?type=Model&format=SafeTensor&size=pruned&fp=fp16"
+    - git clone --branch v1.7.0 https://github.com/AUTOMATIC1111/stable-diffusion-webui /stable-diffusion-webui
     - git clone https://github.com/speshiou/cog-sd-webui /cog-sd-webui
     - python /cog-sd-webui/init_env.py --skip-torch-cuda-test
-
-image: "r8.im/speshiou/majicmix-realistic-sd-webui"
 
 # predict.py defines how predictions are run on your model
 predict: "predict.py:Predictor"

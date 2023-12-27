@@ -2,18 +2,34 @@
 # https://github.com/replicate/cog/blob/main/docs/python.md
 
 import os, sys, json
+import shutil
+
 sys.path.extend(['/stable-diffusion-webui'])
 
 from cog import BasePredictor, BaseModel, Input, Path
 
 class Predictor(BasePredictor):
+    def _move_model_to_sdwebui_dir(self):
+        source_dir = "model"
+        target_dir = "/stable-diffusion-webui/models/Stable-diffusion"
+        # Get a list of all files in the source directory
+        files = os.listdir(source_dir)
+
+        # Move each file from the source directory to the target directory
+        for file in files:
+            source_file = os.path.join(source_dir, file)
+            target_file = os.path.join(target_dir, file)
+            shutil.move(source_file, target_file)
+
+
     def setup(self) -> None:
         """Load the model into memory to make running multiple predictions efficient"""
+        self._move_model_to_sdwebui_dir()
 
         # workaround for replicate since its entrypoint may contain invalid args
         os.environ['IGNORE_CMD_ARGS_ERRORS'] = '1'
         from modules import timer
-        # moved env preparation to build time
+        # moved env preparation to build time to reduce the warm-up time
         # from modules import launch_utils
 
         # with launch_utils.startup_timer.subcategory("prepare environment"):
