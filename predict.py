@@ -101,6 +101,9 @@ class Predictor(BasePredictor):
         hr_scale: float = Input(
             description="Factor to scale image by", ge=1, le=4, default=2
         ),
+        enable_adetailer: bool = Input(
+            description="ADetailer", default=False,
+        ),
     ) -> list[Path]:
         """Run a single prediction on the model"""
         # processed_input = preprocess(image)
@@ -124,6 +127,20 @@ class Predictor(BasePredictor):
             "denoising_strength": denoising_strength if enable_hr else None,
             "hr_scale": hr_scale,
         }
+
+        alwayson_scripts = []
+
+        if enable_adetailer:
+            alwayson_scripts["ADetailer"] = {
+                "args": [
+                    {
+                        "ad_model": "face_yolov8n.pt"
+                    }
+                ]
+            }
+
+        if alwayson_scripts:
+            payload["alwayson_scripts"] = alwayson_scripts
 
         from modules.api.models import StableDiffusionTxt2ImgProcessingAPI, StableDiffusionImg2ImgProcessingAPI
         req = StableDiffusionTxt2ImgProcessingAPI(**payload)
