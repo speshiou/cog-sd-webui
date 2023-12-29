@@ -128,7 +128,7 @@ class Predictor(BasePredictor):
             "hr_scale": hr_scale,
         }
 
-        alwayson_scripts = []
+        alwayson_scripts = {}
 
         if enable_adetailer:
             alwayson_scripts["ADetailer"] = {
