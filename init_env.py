@@ -1,5 +1,6 @@
 import sys
-sys.path.extend(['/stable-diffusion-webui'])
+
+sys.path.extend(["/stable-diffusion-webui"])
 
 from modules import launch_utils
 

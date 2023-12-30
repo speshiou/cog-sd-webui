@@ -4,9 +4,10 @@
 import os, sys, json
 import shutil
 
-sys.path.extend(['/stable-diffusion-webui'])
+sys.path.extend(["/stable-diffusion-webui"])
 
 from cog import BasePredictor, BaseModel, Input, Path
+
 
 class Predictor(BasePredictor):
     def _move_model_to_sdwebui_dir(self):
@@ -21,14 +22,14 @@ class Predictor(BasePredictor):
             target_file = os.path.join(target_dir, file)
             shutil.move(source_file, target_file)
 
-
     def setup(self) -> None:
         """Load the model into memory to make running multiple predictions efficient"""
         self._move_model_to_sdwebui_dir()
 
         # workaround for replicate since its entrypoint may contain invalid args
-        os.environ['IGNORE_CMD_ARGS_ERRORS'] = '1'
+        os.environ["IGNORE_CMD_ARGS_ERRORS"] = "1"
         from modules import timer
+
         # moved env preparation to build time to reduce the warm-up time
         # from modules import launch_utils
 
@@ -48,12 +49,13 @@ class Predictor(BasePredictor):
         initialize.initialize()
 
         from fastapi import FastAPI
+
         app = FastAPI()
         initialize_util.setup_middleware(app)
 
         from modules.api.api import Api
         from modules.call_queue import queue_lock
-        
+
         self.api = Api(app, queue_lock)
 
     def predict(
@@ -71,7 +73,38 @@ class Predictor(BasePredictor):
         ),
         scheduler: str = Input(
             description="scheduler",
-            choices=['DPM++ 2M Karras', 'DPM++ SDE Karras', 'DPM++ 2M SDE Exponential', 'DPM++ 2M SDE Karras', 'Euler a', 'Euler', 'LMS', 'Heun', 'DPM2', 'DPM2 a', 'DPM++ 2S a', 'DPM++ 2M', 'DPM++ SDE', 'DPM++ 2M SDE', 'DPM++ 2M SDE Heun', 'DPM++ 2M SDE Heun Karras', 'DPM++ 2M SDE Heun Exponential', 'DPM++ 3M SDE', 'DPM++ 3M SDE Karras', 'DPM++ 3M SDE Exponential', 'DPM fast', 'DPM adaptive', 'LMS Karras', 'DPM2 Karras', 'DPM2 a Karras', 'DPM++ 2S a Karras', 'Restart', 'DDIM', 'PLMS', 'UniPC'],
+            choices=[
+                "DPM++ 2M Karras",
+                "DPM++ SDE Karras",
+                "DPM++ 2M SDE Exponential",
+                "DPM++ 2M SDE Karras",
+                "Euler a",
+                "Euler",
+                "LMS",
+                "Heun",
+                "DPM2",
+                "DPM2 a",
+                "DPM++ 2S a",
+                "DPM++ 2M",
+                "DPM++ SDE",
+                "DPM++ 2M SDE",
+                "DPM++ 2M SDE Heun",
+                "DPM++ 2M SDE Heun Karras",
+                "DPM++ 2M SDE Heun Exponential",
+                "DPM++ 3M SDE",
+                "DPM++ 3M SDE Karras",
+                "DPM++ 3M SDE Exponential",
+                "DPM fast",
+                "DPM adaptive",
+                "LMS Karras",
+                "DPM2 Karras",
+                "DPM2 a Karras",
+                "DPM++ 2S a Karras",
+                "Restart",
+                "DDIM",
+                "PLMS",
+                "UniPC",
+            ],
             default="DPM++ SDE Karras",
         ),
         num_inference_steps: int = Input(
@@ -85,24 +118,46 @@ class Predictor(BasePredictor):
         ),
         # image: Path = Input(description="Grayscale input image"),
         enable_hr: bool = Input(
-            description="Hires. fix", default=False,
+            description="Hires. fix",
+            default=False,
         ),
         hr_upscaler: str = Input(
             description="Upscaler for Hires. fix",
-            choices=['Latent', 'Latent (antialiased)', 'Latent (bicubic)', 'Latent (bicubic antialiased)', 'Latent (nearest)', 'Latent (nearest-exact)', 'None', 'Lanczos', 'Nearest', 'ESRGAN_4x', 'LDSR', 'R-ESRGAN 4x+', 'R-ESRGAN 4x+ Anime6B', 'ScuNET GAN', 'ScuNET PSNR', 'SwinIR 4x'],
+            choices=[
+                "Latent",
+                "Latent (antialiased)",
+                "Latent (bicubic)",
+                "Latent (bicubic antialiased)",
+                "Latent (nearest)",
+                "Latent (nearest-exact)",
+                "None",
+                "Lanczos",
+                "Nearest",
+                "ESRGAN_4x",
+                "LDSR",
+                "R-ESRGAN 4x+",
+                "R-ESRGAN 4x+ Anime6B",
+                "ScuNET GAN",
+                "ScuNET PSNR",
+                "SwinIR 4x",
+            ],
             default="Latent",
         ),
         hr_steps: int = Input(
             description="Inference steps for Hires. fix", ge=0, le=100, default=20
         ),
         denoising_strength: float = Input(
-            description="Denoising strength. 1.0 corresponds to full destruction of information in init image", ge=0, le=1, default=0.5
+            description="Denoising strength. 1.0 corresponds to full destruction of information in init image",
+            ge=0,
+            le=1,
+            default=0.5,
         ),
         hr_scale: float = Input(
             description="Factor to scale image by", ge=1, le=4, default=2
         ),
         enable_adetailer: bool = Input(
-            description="ADetailer", default=False,
+            description="ADetailer",
+            default=False,
         ),
     ) -> list[Path]:
         """Run a single prediction on the model"""
@@ -134,15 +189,19 @@ class Predictor(BasePredictor):
             alwayson_scripts["ADetailer"] = {
                 "args": [
                     {
-                        "ad_model": "face_yolov8n.pt"
+                        "ad_model": "face_yolov8n.pt",
                     }
-                ]
+                ],
             }
 
         if alwayson_scripts:
             payload["alwayson_scripts"] = alwayson_scripts
 
-        from modules.api.models import StableDiffusionTxt2ImgProcessingAPI, StableDiffusionImg2ImgProcessingAPI
+        from modules.api.models import (
+            StableDiffusionTxt2ImgProcessingAPI,
+            StableDiffusionImg2ImgProcessingAPI,
+        )
+
         req = StableDiffusionTxt2ImgProcessingAPI(**payload)
         # generate
         resp = self.api.text2imgapi(req)
