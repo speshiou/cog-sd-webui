@@ -24,6 +24,7 @@ build:
     - git clone --branch v1.7.0 https://github.com/AUTOMATIC1111/stable-diffusion-webui /stable-diffusion-webui
     - git clone https://github.com/Bing-su/adetailer.git /stable-diffusion-webui/extensions/adetailer
     - git clone https://github.com/speshiou/cog-sd-webui /cog-sd-webui
+    - wget --content-disposition -P /stable-diffusion-webui/embeddings "https://huggingface.co/datasets/gsdf/EasyNegative/resolve/main/EasyNegative.safetensors?download=true"
     - python /cog-sd-webui/init_env.py --skip-torch-cuda-test
 
 # predict.py defines how predictions are run on your model
