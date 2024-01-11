@@ -61,12 +61,15 @@ class Predictor(BasePredictor):
     def predict(
         self,
         prompt: str = Input(description="Prompt"),
-        negative_prompt: str = Input(description="Negative Prompt", default=""),
+        negative_prompt: str = Input(
+            description="Negative Prompt",
+            default="EasyNegative",
+        ),
         width: int = Input(
             description="Width of output image", ge=1, le=1024, default=512
         ),
         height: int = Input(
-            description="Height of output image", ge=1, le=1024, default=512
+            description="Height of output image", ge=1, le=1024, default=768
         ),
         num_outputs: int = Input(
             description="Number of images to output", ge=1, le=4, default=1
@@ -146,17 +149,17 @@ class Predictor(BasePredictor):
         hr_steps: int = Input(
             description="Inference steps for Hires. fix", ge=0, le=100, default=20
         ),
+        hr_scale: float = Input(
+            description="Factor to scale image by", ge=1, le=4, default=2
+        ),
         denoising_strength: float = Input(
             description="Denoising strength. 1.0 corresponds to full destruction of information in init image",
             ge=0,
             le=1,
             default=0.5,
         ),
-        hr_scale: float = Input(
-            description="Factor to scale image by", ge=1, le=4, default=2
-        ),
         enable_adetailer: bool = Input(
-            description="ADetailer",
+            description="ADetailer, suggests enabling for expected small faces, e.g. full body, long-range view",
             default=False,
         ),
     ) -> list[Path]:
